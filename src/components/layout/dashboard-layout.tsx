@@ -13,6 +13,7 @@ import {
   Tag,
   Home,
   Calendar,
+  BarChart3,
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -29,6 +30,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       href: '/',
       icon: LayoutDashboard,
       isActive: pathname === '/',
+    },
+    {
+      label: 'Analytics',
+      href: '/analytics',
+      icon: BarChart3,
+      isActive: pathname.startsWith('/analytics'),
     },
     {
       label: 'Orders',
