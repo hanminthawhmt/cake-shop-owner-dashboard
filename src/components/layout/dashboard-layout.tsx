@@ -1,8 +1,10 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import { Cake, LogOut, User as UserIcon } from 'lucide-react';
+import { Cake, LogOut, User as UserIcon, LayoutDashboard, ShoppingBag } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -10,28 +12,67 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const { user, logout } = useAuth();
+  const pathname = usePathname();
+
+  const navItems = [
+    {
+      label: 'Dashboard',
+      href: '/',
+      icon: LayoutDashboard,
+      isActive: pathname === '/',
+    },
+    {
+      label: 'Orders',
+      href: '/orders',
+      icon: ShoppingBag,
+      isActive: pathname.startsWith('/orders'),
+    },
+  ];
 
   return (
     <div className="min-h-screen flex flex-col bg-[#FAF6F0]">
       {/* Top Header Navigation */}
       <header className="bg-white border-b border-[#F2E8DF] sticky top-0 z-30 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#FDF0EE] border border-[#F4B4BA] flex items-center justify-center text-[#E07A5F]">
-              <Cake className="w-5 h-5" />
-            </div>
-            <div>
-              <span className="font-bold text-lg text-[#3D2314] tracking-tight block">
-                Petal & Cocoa
-              </span>
-              <span className="text-[10px] font-semibold tracking-wider text-[#E07A5F] uppercase block">
-                Owner Dashboard
-              </span>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-3 group">
+              <div className="w-10 h-10 rounded-xl bg-[#FDF0EE] border border-[#F4B4BA] flex items-center justify-center text-[#E07A5F] group-hover:bg-[#E07A5F] group-hover:text-white transition-colors">
+                <Cake className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="font-bold text-lg text-[#3D2314] tracking-tight block leading-tight">
+                  Petal & Cocoa
+                </span>
+                <span className="text-[10px] font-semibold tracking-wider text-[#E07A5F] uppercase block leading-tight">
+                  Owner Dashboard
+                </span>
+              </div>
+            </Link>
+
+            {/* Navigation Tabs */}
+            <nav className="hidden md:flex items-center gap-1.5 ml-4">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all ${
+                      item.isActive
+                        ? 'bg-[#FDF0EE] text-[#E07A5F] border border-[#F4B4BA]'
+                        : 'text-[#7C685C] hover:bg-[#FAF6F0] hover:text-[#3D2314]'
+                    }`}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
 
           {user && (
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3 sm:gap-4">
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#FAF6F0] border border-[#F2E8DF]">
                 <UserIcon className="w-4 h-4 text-[#7C685C]" />
                 <div className="text-left">
@@ -55,6 +96,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </button>
             </div>
           )}
+        </div>
+
+        {/* Mobile Navigation Sub-bar */}
+        <div className="md:hidden border-t border-[#F2E8DF] px-4 py-2 flex items-center gap-2 bg-[#FAF6F0]/50">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  item.isActive
+                    ? 'bg-[#E07A5F] text-white shadow-2xs'
+                    : 'text-[#7C685C] bg-white border border-[#F2E8DF]'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5" />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
         </div>
       </header>
 
