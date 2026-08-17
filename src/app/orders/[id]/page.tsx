@@ -1,11 +1,17 @@
 'use client';
 
-import React, { use } from 'react';
+import React, { use, useState } from 'react';
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
-import { useOrderDetail } from '@/hooks/use-orders';
+import {
+  useOrderDetail,
+  useUpdateOrderStatus,
+  useUpdatePaymentStatus,
+  fetchBakingSlipHtml,
+} from '@/hooks/use-orders';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/orders/order-status-badge';
+import { OrderStatus, PaymentStatus } from '@/types/orders';
 import {
   ArrowLeft,
   Calendar,
@@ -19,6 +25,13 @@ import {
   AlertCircle,
   Receipt,
   Printer,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+  CreditCard,
+  ChefHat,
+  PackageCheck,
+  ArrowRight,
 } from 'lucide-react';
 
 interface OrderDetailPageProps {
@@ -40,6 +53,9 @@ export default function OrderDetailPage({ params }: OrderDetailPageProps) {
 
 function OrderDetailView({ orderId }: { orderId: number }) {
   const { data: order, isLoading, isError } = useOrderDetail(orderId);
+  const updateStatusMutation = useUpdateOrderStatus(orderId);
+  const updatePaymentMutation = useUpdatePaymentStatus(orderId);
+  const [isPrintingSlip, setIsPrintingSlip] = useState(false);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -62,6 +78,49 @@ function OrderDetailView({ orderId }: { orderId: number }) {
       });
     }
     return dateStr;
+  };
+
+  const getNextStatus = (currentStatus: OrderStatus): { nextStatus: OrderStatus; label: string } | null => {
+    switch (currentStatus) {
+      case 'confirmed':
+        return { nextStatus: 'preparing', label: 'Start Preparing' };
+      case 'preparing':
+        return { nextStatus: 'ready_for_pick_up', label: 'Mark Ready for Pickup' };
+      case 'ready_for_pick_up':
+        return { nextStatus: 'completed', label: 'Complete Order' };
+      default:
+        return null;
+    }
+  };
+
+  const handlePrintBakingSlip = async () => {
+    if (!order) return;
+    setIsPrintingSlip(true);
+    try {
+      const htmlContent = await fetchBakingSlipHtml(order.id);
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const blobUrl = URL.createObjectURL(blob);
+      window.open(blobUrl, '_blank');
+    } catch (err) {
+      console.error('Failed to open baking slip:', err);
+      alert('Failed to load baking slip. Please try again.');
+    } finally {
+      setIsPrintingSlip(false);
+    }
+  };
+
+  const handleStatusChange = (newStatus: OrderStatus) => {
+    if (!order) return;
+    if (newStatus === 'cancelled') {
+      if (!confirm('Are you sure you want to cancel this order?')) return;
+    }
+    updateStatusMutation.mutate(newStatus);
+  };
+
+  const handleTogglePayment = () => {
+    if (!order) return;
+    const targetStatus: PaymentStatus = order.paymentStatus === 'paid' ? 'unpaid' : 'paid';
+    updatePaymentMutation.mutate(targetStatus);
   };
 
   if (isLoading) {
@@ -91,12 +150,37 @@ function OrderDetailView({ orderId }: { orderId: number }) {
     );
   }
 
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
-  const bakingSlipUrl = `${API_BASE_URL}/orders/${order.id}/baking-slip`;
+  const nextStatusInfo = getNextStatus(order.status);
+  const isTerminalState = order.status === 'completed' || order.status === 'cancelled';
+  const canCancel = !isTerminalState;
+
+  const statusSteps: { key: OrderStatus; label: string; icon: React.ElementType }[] = [
+    { key: 'confirmed', label: 'Confirmed', icon: CheckCircle2 },
+    { key: 'preparing', label: 'Preparing', icon: ChefHat },
+    { key: 'ready_for_pick_up', label: 'Ready for Pickup', icon: PackageCheck },
+    { key: 'completed', label: 'Completed', icon: CheckCircle2 },
+  ];
+
+  const getStepIndex = (status: OrderStatus) => {
+    switch (status) {
+      case 'confirmed':
+        return 0;
+      case 'preparing':
+        return 1;
+      case 'ready_for_pick_up':
+        return 2;
+      case 'completed':
+        return 3;
+      default:
+        return -1;
+    }
+  };
+
+  const currentStepIdx = getStepIndex(order.status);
 
   return (
     <div className="space-y-8">
-      {/* Top Bar Navigation & Actions */}
+      {/* Top Navigation & Action Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
           <Link
@@ -120,16 +204,121 @@ function OrderDetailView({ orderId }: { orderId: number }) {
           </div>
         </div>
 
-        {/* Printable Baking Slip Action */}
-        <a
-          href={bakingSlipUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-xs font-semibold text-[#3D2314] border border-[#F2E8DF] hover:bg-[#FAF6F0] transition-colors shadow-2xs cursor-pointer self-start sm:self-auto"
-        >
-          <Printer className="w-4 h-4 text-[#E07A5F]" />
-          <span>View Baking Slip</span>
-        </a>
+        {/* Action Controls */}
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* Print Baking Slip Button (Authenticated Blob URL) */}
+          <button
+            onClick={handlePrintBakingSlip}
+            disabled={isPrintingSlip}
+            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white text-xs font-semibold text-[#3D2314] border border-[#F2E8DF] hover:bg-[#FAF6F0] transition-colors shadow-2xs cursor-pointer disabled:opacity-60"
+          >
+            {isPrintingSlip ? (
+              <Loader2 className="w-4 h-4 text-[#E07A5F] animate-spin" />
+            ) : (
+              <Printer className="w-4 h-4 text-[#E07A5F]" />
+            )}
+            <span>{isPrintingSlip ? 'Loading Slip...' : 'Print Baking Slip'}</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Interactive Status & Workflow Banner */}
+      <div className="bg-white rounded-2xl p-6 border border-[#F2E8DF] shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#F2E8DF]">
+          <div>
+            <h3 className="text-xs font-bold text-[#3D2314] uppercase tracking-wider">
+              Order Workflow & Actions
+            </h3>
+            <p className="text-xs text-[#9C8A7E]">Manage status progression and payment records</p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Payment Toggle Button */}
+            <button
+              onClick={handleTogglePayment}
+              disabled={updatePaymentMutation.isPending}
+              className={`inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shadow-2xs ${
+                order.paymentStatus === 'paid'
+                  ? 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'
+                  : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700'
+              }`}
+            >
+              {updatePaymentMutation.isPending ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <CreditCard className="w-3.5 h-3.5" />
+              )}
+              <span>
+                {order.paymentStatus === 'paid' ? 'Mark as Unpaid' : 'Mark Payment Received'}
+              </span>
+            </button>
+
+            {/* Next Sequential Status Button */}
+            {nextStatusInfo && (
+              <button
+                onClick={() => handleStatusChange(nextStatusInfo.nextStatus)}
+                disabled={updateStatusMutation.isPending}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[#E07A5F] hover:bg-[#D0694E] border border-transparent transition-all shadow-2xs cursor-pointer disabled:opacity-60"
+              >
+                {updateStatusMutation.isPending ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <ArrowRight className="w-3.5 h-3.5" />
+                )}
+                <span>{nextStatusInfo.label}</span>
+              </button>
+            )}
+
+            {/* Cancel Action Button */}
+            {canCancel && (
+              <button
+                onClick={() => handleStatusChange('cancelled')}
+                disabled={updateStatusMutation.isPending}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors cursor-pointer disabled:opacity-60"
+              >
+                <XCircle className="w-3.5 h-3.5" />
+                <span>Cancel Order</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Visual Progress Steps */}
+        {order.status !== 'cancelled' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {statusSteps.map((step, idx) => {
+              const isCurrent = currentStepIdx === idx;
+              const isPassed = currentStepIdx > idx;
+              const StepIcon = step.icon;
+
+              return (
+                <div
+                  key={step.key}
+                  className={`p-3 rounded-xl border transition-all ${
+                    isCurrent
+                      ? 'bg-[#FDF0EE] border-[#F4B4BA] text-[#E07A5F] ring-2 ring-[#E07A5F]/20'
+                      : isPassed
+                      ? 'bg-emerald-50/50 border-emerald-200 text-emerald-700'
+                      : 'bg-[#FAF6F0] border-[#F2E8DF] text-[#9C8A7E]'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <StepIcon className="w-4 h-4 shrink-0" />
+                    <span className="text-xs font-bold truncate">{step.label}</span>
+                  </div>
+                  <p className="text-[10px] mt-1 font-medium">
+                    {isCurrent ? 'Current Status' : isPassed ? 'Completed' : 'Pending Step'}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-rose-50 p-4 rounded-xl border border-rose-200 text-xs text-rose-800 font-medium flex items-center gap-2">
+            <XCircle className="w-4 h-4 shrink-0" />
+            <span>This order was cancelled and cannot undergo further status changes.</span>
+          </div>
+        )}
       </div>
 
       {/* Grid: Order Metadata (Customer & Pickup Info) */}
@@ -305,6 +494,7 @@ function OrderDetailSkeleton() {
   return (
     <div className="space-y-8 animate-pulse">
       <div className="h-8 w-48 bg-[#F2E8DF] rounded-xl" />
+      <div className="h-28 bg-white rounded-2xl border border-[#F2E8DF]" />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="h-40 bg-white rounded-2xl border border-[#F2E8DF]" />
         <div className="h-40 bg-white rounded-2xl border border-[#F2E8DF]" />

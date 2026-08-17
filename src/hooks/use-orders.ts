@@ -1,8 +1,8 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/lib/api-client';
-import { Order, OrderFilterParams } from '@/types/orders';
+import { Order, OrderFilterParams, OrderStatus, PaymentStatus } from '@/types/orders';
 
 export function useOrdersList(filters?: OrderFilterParams) {
   return useQuery<Order[]>({
@@ -29,4 +29,43 @@ export function useOrderDetail(id: number) {
     enabled: Boolean(id) && !isNaN(id),
     staleTime: 1000 * 60, // 1 minute
   });
+}
+
+export function useUpdateOrderStatus(id: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (status: OrderStatus) => {
+      const response = await apiClient.patch<Order>(`/orders/${id}/status`, { status });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order-detail', id] });
+      queryClient.invalidateQueries({ queryKey: ['orders-list'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'] });
+    },
+  });
+}
+
+export function useUpdatePaymentStatus(id: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (paymentStatus: PaymentStatus) => {
+      const response = await apiClient.patch<Order>(`/orders/${id}/payment`, { paymentStatus });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['order-detail', id] });
+      queryClient.invalidateQueries({ queryKey: ['orders-list'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'] });
+    },
+  });
+}
+
+export async function fetchBakingSlipHtml(id: number): Promise<string> {
+  const response = await apiClient.get<string>(`/orders/${id}/baking-slip`, {
+    responseType: 'text',
+  });
+  return response.data;
 }
