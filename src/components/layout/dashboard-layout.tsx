@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import { Cake as CakeIcon, LogOut, User as UserIcon, LayoutDashboard, ShoppingBag, Tag } from 'lucide-react';
+import { Cake as CakeIcon, LogOut, User as UserIcon, LayoutDashboard, ShoppingBag, Tag, Home } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -38,6 +38,12 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       href: '/categories',
       icon: Tag,
       isActive: pathname.startsWith('/categories'),
+    },
+    {
+      label: 'Birthday Rooms',
+      href: '/rooms',
+      icon: Home,
+      isActive: pathname.startsWith('/rooms'),
     },
   ];
 
