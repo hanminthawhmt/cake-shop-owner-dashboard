@@ -1,6 +1,8 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { LogInUserDto, User, SignInResponse } from '@/types/auth';
 import { apiClient } from '@/lib/api-client';
 import { authStorage } from '@/lib/auth-storage';
@@ -17,6 +19,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const [user, setUser] = useState<User | null>(null);
   const [token, setTokenState] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -72,10 +77,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = useCallback(() => {
+    // 1. Clear stored JWT token from cookies & localStorage
     authStorage.removeToken();
+
+    // 2. Clear react-query cache to wipe owner data from memory
+    queryClient.clear();
+
+    // 3. Reset React auth state
     setTokenState(null);
     setUser(null);
-  }, []);
+
+    // 4. Redirect to login page
+    router.push('/login');
+  }, [router, queryClient]);
 
   return (
     <AuthContext.Provider
