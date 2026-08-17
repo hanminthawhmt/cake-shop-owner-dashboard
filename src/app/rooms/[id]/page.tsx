@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useRoomDetail, useUpdateRoom, useDeleteRoom } from '@/hooks/use-rooms';
 import { RoomImagesManager } from '@/components/rooms/room-images-manager';
+import { RoomAvailabilityChecker } from '@/components/rooms/room-availability-checker';
 import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
 import {
   ArrowLeft,
@@ -308,7 +309,10 @@ function RoomDetailView({ roomId }: { roomId: number }) {
         </div>
       </form>
 
-      {/* Section 2: Room Photo Management */}
+      {/* Section 2: Time Slot Availability Checker */}
+      <RoomAvailabilityChecker roomId={roomId} />
+
+      {/* Section 3: Room Photo Management */}
       <RoomImagesManager roomId={roomId} images={room.images || []} />
 
       {/* Delete Confirmation Modal */}
