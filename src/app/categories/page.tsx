@@ -6,6 +6,7 @@ import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useCategories, useDeleteCategory } from '@/hooks/use-catalog';
 import { Category } from '@/types/catalog';
 import { CategoryFormModal } from '@/components/categories/category-form-modal';
+import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
 import { Tag, Plus, Edit2, Trash2, Loader2, AlertCircle, RefreshCw } from 'lucide-react';
 
 export default function CategoriesPage() {
@@ -25,6 +26,9 @@ function CategoriesView() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
 
+  // Deletion confirmation modal state
+  const [deleteTargetCategory, setDeleteTargetCategory] = useState<Category | null>(null);
+
   const handleOpenCreate = () => {
     setSelectedCategory(null);
     setIsModalOpen(true);
@@ -35,10 +39,18 @@ function CategoriesView() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (category: Category) => {
-    if (confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-      deleteMutation.mutate(category.id);
-    }
+  const handleDeleteClick = (category: Category) => {
+    deleteMutation.reset();
+    setDeleteTargetCategory(category);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTargetCategory) return;
+    deleteMutation.mutate(deleteTargetCategory.id, {
+      onSuccess: () => {
+        setDeleteTargetCategory(null);
+      },
+    });
   };
 
   return (
@@ -145,16 +157,11 @@ function CategoriesView() {
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
-                          onClick={() => handleDelete(category)}
-                          disabled={deleteMutation.isPending}
-                          className="p-2 rounded-xl text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-200 cursor-pointer disabled:opacity-60"
+                          onClick={() => handleDeleteClick(category)}
+                          className="p-2 rounded-xl text-rose-700 bg-rose-50 hover:bg-rose-100 transition-colors border border-rose-200 cursor-pointer"
                           title="Delete category"
                         >
-                          {deleteMutation.isPending ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Trash2 className="w-3.5 h-3.5" />
-                          )}
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </td>
@@ -171,6 +178,21 @@ function CategoriesView() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         categoryToEdit={selectedCategory}
+      />
+
+      {/* Delete Confirmation Modal with 409 error surfacing */}
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteTargetCategory)}
+        onClose={() => {
+          setDeleteTargetCategory(null);
+          deleteMutation.reset();
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? Note that categories cannot be deleted if active cakes are still assigned to them."
+        itemName={deleteTargetCategory?.name}
+        isPending={deleteMutation.isPending}
+        errorMessage={deleteMutation.isError ? getApiErrorMessage(deleteMutation.error) : null}
       />
     </div>
   );

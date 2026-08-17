@@ -2,11 +2,13 @@
 
 import React, { useState, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { ProtectedRoute } from '@/components/auth/protected-route';
 import { DashboardLayout } from '@/components/layout/dashboard-layout';
 import { useCakesList, useCategories, useUpdateCake, useDeleteCake } from '@/hooks/use-catalog';
 import { Cake, Category } from '@/types/catalog';
 import { CakeFormModal } from '@/components/cakes/cake-form-modal';
+import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
 import {
   Cake as CakeIcon,
   Plus,
@@ -20,6 +22,7 @@ import {
   AlertCircle,
   RefreshCw,
   Tag,
+  Settings2,
 } from 'lucide-react';
 
 export default function CakesPage() {
@@ -43,6 +46,9 @@ function CakesCatalogView() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedCake, setSelectedCake] = useState<Cake | null>(null);
+
+  // Deletion confirmation state
+  const [deleteTargetCake, setDeleteTargetCake] = useState<Cake | null>(null);
 
   const formatCurrency = (amount: number | string) => {
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
@@ -96,10 +102,18 @@ function CakesCatalogView() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (cake: Cake) => {
-    if (confirm(`Are you sure you want to delete "${cake.name}" from catalog?`)) {
-      deleteMutation.mutate(cake.id);
-    }
+  const handleDeleteClick = (cake: Cake) => {
+    deleteMutation.reset();
+    setDeleteTargetCake(cake);
+  };
+
+  const handleConfirmDelete = () => {
+    if (!deleteTargetCake) return;
+    deleteMutation.mutate(deleteTargetCake.id, {
+      onSuccess: () => {
+        setDeleteTargetCake(null);
+      },
+    });
   };
 
   return (
@@ -111,7 +125,7 @@ function CakesCatalogView() {
             Cakes Catalog
           </h1>
           <p className="text-xs sm:text-sm text-[#7C685C] font-medium mt-1">
-            Manage bakery product items, base pricing, and availability status.
+            Manage bakery product items, base pricing, photos, and customization options.
           </p>
         </div>
 
@@ -236,7 +250,7 @@ function CakesCatalogView() {
               categoryName={categoryMap.get(cake.categoryId) || cake.category?.name || 'Uncategorized'}
               formatCurrency={formatCurrency}
               onEdit={() => handleOpenEdit(cake)}
-              onDelete={() => handleDelete(cake)}
+              onDelete={() => handleDeleteClick(cake)}
             />
           ))}
         </div>
@@ -248,6 +262,21 @@ function CakesCatalogView() {
         onClose={() => setIsModalOpen(false)}
         cakeToEdit={selectedCake}
         categories={categories}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={Boolean(deleteTargetCake)}
+        onClose={() => {
+          setDeleteTargetCake(null);
+          deleteMutation.reset();
+        }}
+        onConfirm={handleConfirmDelete}
+        title="Delete Cake Product"
+        description="Are you sure you want to delete this cake product? It will be permanently removed from the store catalog."
+        itemName={deleteTargetCake?.name}
+        isPending={deleteMutation.isPending}
+        errorMessage={deleteMutation.isError ? getApiErrorMessage(deleteMutation.error) : null}
       />
     </div>
   );
@@ -278,6 +307,7 @@ function CakeCard({ cake, categoryName, formatCurrency, onEdit, onDelete }: Cake
             src={imageUrl}
             alt={cake.name}
             fill
+            unoptimized
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover group-hover:scale-105 transition-transform duration-300"
           />
@@ -336,6 +366,15 @@ function CakeCard({ cake, categoryName, formatCurrency, onEdit, onDelete }: Cake
           </p>
         </div>
 
+        {/* Manage Details Link */}
+        <Link
+          href={`/cakes/${cake.id}`}
+          className="inline-flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-[#FAF6F0] hover:bg-[#FDF0EE] text-xs font-semibold text-[#E07A5F] border border-[#F4B4BA]/50 transition-colors"
+        >
+          <Settings2 className="w-3.5 h-3.5" />
+          <span>Photos & Options Manager</span>
+        </Link>
+
         {/* Card Footer Actions */}
         <div className="pt-3 border-t border-[#F2E8DF] flex items-center justify-between gap-2">
           {/* Quick Availability Toggle */}
@@ -357,7 +396,7 @@ function CakeCard({ cake, categoryName, formatCurrency, onEdit, onDelete }: Cake
             <button
               onClick={onEdit}
               className="p-1.5 rounded-xl text-[#7C685C] bg-[#FAF6F0] hover:bg-[#F2E8DF] hover:text-[#3D2314] transition-colors border border-[#F2E8DF] cursor-pointer"
-              title="Edit cake details"
+              title="Quick edit cake basic info"
             >
               <Edit2 className="w-3.5 h-3.5" />
             </button>

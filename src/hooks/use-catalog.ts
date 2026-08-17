@@ -7,6 +7,8 @@ import {
   CreateCategoryDto,
   Cake,
   CreateCakeDto,
+  CreateCakeOptionDto,
+  CreateCakeOptionValueDto,
 } from '@/types/catalog';
 
 // --- CATEGORIES HOOKS ---
@@ -86,6 +88,7 @@ export function useCakeDetail(id: number) {
       return response.data;
     },
     enabled: Boolean(id) && !isNaN(id),
+    staleTime: 1000 * 30,
   });
 }
 
@@ -130,6 +133,136 @@ export function useDeleteCake() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cakes-list'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-analytics'] });
+    },
+  });
+}
+
+// --- CAKE IMAGES HOOKS ---
+
+export function useUploadCakeImage(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const response = await apiClient.post(`/cakes/${cakeId}/images`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+      queryClient.invalidateQueries({ queryKey: ['cakes-list'] });
+    },
+  });
+}
+
+export function useDeleteCakeImage(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (imageId: number) => {
+      await apiClient.delete(`/cakes/${cakeId}/images/${imageId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+      queryClient.invalidateQueries({ queryKey: ['cakes-list'] });
+    },
+  });
+}
+
+// --- CAKE OPTIONS & VALUES HOOKS ---
+
+export function useCreateCakeOption(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (data: CreateCakeOptionDto) => {
+      const response = await apiClient.post(`/cakes/${cakeId}/options`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+    },
+  });
+}
+
+export function useUpdateCakeOption(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ optionId, data }: { optionId: number; data: CreateCakeOptionDto }) => {
+      const response = await apiClient.patch(`/cakes/${cakeId}/options/${optionId}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+    },
+  });
+}
+
+export function useDeleteCakeOption(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (optionId: number) => {
+      await apiClient.delete(`/cakes/${cakeId}/options/${optionId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+    },
+  });
+}
+
+export function useCreateCakeOptionValue(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ optionId, data }: { optionId: number; data: CreateCakeOptionValueDto }) => {
+      const response = await apiClient.post(`/cakes/${cakeId}/options/${optionId}/values`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+    },
+  });
+}
+
+export function useUpdateCakeOptionValue(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      optionId,
+      valueId,
+      data,
+    }: {
+      optionId: number;
+      valueId: number;
+      data: Partial<CreateCakeOptionValueDto>;
+    }) => {
+      const response = await apiClient.patch(`/cakes/${cakeId}/options/${optionId}/values/${valueId}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
+    },
+  });
+}
+
+export function useDeleteCakeOptionValue(cakeId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ optionId, valueId }: { optionId: number; valueId: number }) => {
+      await apiClient.delete(`/cakes/${cakeId}/options/${optionId}/values/${valueId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cake-detail', cakeId] });
     },
   });
 }

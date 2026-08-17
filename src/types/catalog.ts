@@ -8,6 +8,20 @@ export interface CakeImage {
   url: string;
 }
 
+export interface CakeOptionValue {
+  id: number;
+  cakeOptionId: number;
+  label: string;
+  priceModifier: number | string;
+}
+
+export interface CakeOption {
+  id: number;
+  cakeId: number;
+  name: string;
+  values: CakeOptionValue[];
+}
+
 export interface Cake {
   id: number;
   name: string;
@@ -17,6 +31,7 @@ export interface Cake {
   categoryId: number;
   category?: Category;
   images?: CakeImage[];
+  options?: CakeOption[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -31,4 +46,13 @@ export interface CreateCakeDto {
   basePrice: number;
   isAvailable: boolean;
   categoryId: number;
+}
+
+export interface CreateCakeOptionDto {
+  name: string;
+}
+
+export interface CreateCakeOptionValueDto {
+  label: string;
+  priceModifier: number;
 }
