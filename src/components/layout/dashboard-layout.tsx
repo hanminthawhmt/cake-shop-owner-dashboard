@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
-import { Cake, LogOut, User as UserIcon, LayoutDashboard, ShoppingBag } from 'lucide-react';
+import { Cake as CakeIcon, LogOut, User as UserIcon, LayoutDashboard, ShoppingBag, Tag } from 'lucide-react';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -27,6 +27,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       icon: ShoppingBag,
       isActive: pathname.startsWith('/orders'),
     },
+    {
+      label: 'Cakes Catalog',
+      href: '/cakes',
+      icon: CakeIcon,
+      isActive: pathname.startsWith('/cakes'),
+    },
+    {
+      label: 'Categories',
+      href: '/categories',
+      icon: Tag,
+      isActive: pathname.startsWith('/categories'),
+    },
   ];
 
   return (
@@ -37,7 +49,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center gap-3 group">
               <div className="w-10 h-10 rounded-xl bg-[#FDF0EE] border border-[#F4B4BA] flex items-center justify-center text-[#E07A5F] group-hover:bg-[#E07A5F] group-hover:text-white transition-colors">
-                <Cake className="w-5 h-5" />
+                <CakeIcon className="w-5 h-5" />
               </div>
               <div>
                 <span className="font-bold text-lg text-[#3D2314] tracking-tight block leading-tight">
@@ -99,14 +111,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
 
         {/* Mobile Navigation Sub-bar */}
-        <div className="md:hidden border-t border-[#F2E8DF] px-4 py-2 flex items-center gap-2 bg-[#FAF6F0]/50">
+        <div className="md:hidden border-t border-[#F2E8DF] px-4 py-2 flex items-center gap-2 overflow-x-auto bg-[#FAF6F0]/50">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
                   item.isActive
                     ? 'bg-[#E07A5F] text-white shadow-2xs'
                     : 'text-[#7C685C] bg-white border border-[#F2E8DF]'
