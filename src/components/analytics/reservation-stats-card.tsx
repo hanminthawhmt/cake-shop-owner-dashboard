@@ -28,10 +28,10 @@ export function ReservationStatsCard() {
     cancelled: 'Cancelled',
   };
 
-  const pieData = (stats?.byStatus || []).map((st) => ({
-    name: statusLabels[st.status] || st.status,
+  const pieData = (stats?.byStatus || []).map((st, idx) => ({
+    name: statusLabels[st.status] || st.status || `Status ${idx + 1}`,
     value: st.count,
-    statusKey: st.status,
+    statusKey: st.status || `status-${idx}`,
   }));
 
   const totalReservations = stats?.totalReservations || 0;
@@ -89,7 +89,7 @@ export function ReservationStatsCard() {
                   >
                     {pieData.map((entry, index) => (
                       <Cell
-                        key={`cell-${index}`}
+                        key={`cell-${entry.statusKey}-${index}`}
                         fill={statusColors[entry.statusKey] || '#9C8A7E'}
                       />
                     ))}
@@ -104,9 +104,9 @@ export function ReservationStatsCard() {
 
             {/* Status Pills */}
             <div className="space-y-2">
-              {stats?.byStatus?.map((st) => (
+              {stats?.byStatus?.map((st, idx) => (
                 <div
-                  key={st.status}
+                  key={st.status ? `status-${st.status}` : `status-idx-${idx}`}
                   className="flex items-center justify-between p-2.5 rounded-xl bg-[#FAF6F0]/60 border border-[#F2E8DF] text-xs font-semibold"
                 >
                   <div className="flex items-center gap-2">
@@ -124,19 +124,19 @@ export function ReservationStatsCard() {
             <h4 className="text-xs font-bold text-[#3D2314] uppercase tracking-wider">
               Bookings Per Room
             </h4>
-            {stats?.byRoom?.length === 0 ? (
+            {!stats?.byRoom || stats.byRoom.length === 0 ? (
               <p className="text-xs text-[#9C8A7E] italic">No room specific stats available.</p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {stats?.byRoom?.map((rm) => (
+                {stats.byRoom.map((rm, idx) => (
                   <div
-                    key={rm.roomId}
+                    key={rm.roomId != null ? `room-${rm.roomId}` : `room-idx-${idx}`}
                     className="p-3 rounded-xl bg-[#FAF6F0] border border-[#F2E8DF] flex items-center justify-between gap-2"
                   >
                     <div className="flex items-center gap-2">
                       <Home className="w-3.5 h-3.5 text-[#E07A5F]" />
                       <span className="text-xs font-bold text-[#3D2314]">
-                        {rm.roomName || `Room #${rm.roomId}`}
+                        {rm.roomName || (rm.roomId ? `Room #${rm.roomId}` : `Room ${idx + 1}`)}
                       </span>
                     </div>
                     <span className="text-xs font-bold text-[#E07A5F] bg-white px-2 py-0.5 rounded-md border border-[#F4B4BA]/40">
