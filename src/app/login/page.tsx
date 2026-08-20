@@ -112,7 +112,7 @@ export default function LoginPage() {
             <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#E07A5F]" />
               <h2 className="text-xs font-bold text-[#3D2314] uppercase tracking-wider">
-                Recruiter / Public Demo Login
+                  Public Demo Login
               </h2>
             </div>
             <button
