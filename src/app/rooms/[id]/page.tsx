@@ -9,6 +9,7 @@ import { useRoomDetail, useUpdateRoom, useDeleteRoom } from '@/hooks/use-rooms';
 import { RoomImagesManager } from '@/components/rooms/room-images-manager';
 import { RoomAvailabilityChecker } from '@/components/rooms/room-availability-checker';
 import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
+import { formatCurrency } from '@/lib/currency';
 import {
   ArrowLeft,
   Home,
@@ -19,7 +20,6 @@ import {
   Trash2,
   Check,
   Users,
-  DollarSign,
 } from 'lucide-react';
 
 interface RoomDetailPageProps {
@@ -69,15 +69,6 @@ function RoomDetailView({ roomId }: { roomId: number }) {
       setIsAvailable(room.isAvailable ?? true);
     }
   }, [room]);
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(isNaN(num) ? 0 : num);
-  };
 
   const handleSaveBasicInfo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,11 +264,11 @@ function RoomDetailView({ roomId }: { roomId: number }) {
 
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider">
-              Reservation Price ($) *
+              Reservation Price (฿) *
             </label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#9C8A7E]">
-                <DollarSign className="w-3.5 h-3.5" />
+                <span className="text-xs font-bold text-[#9C8A7E]">฿</span>
               </div>
               <input
                 type="number"

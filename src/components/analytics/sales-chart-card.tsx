@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useSalesAnalytics, downloadSalesCsv } from '@/hooks/use-analytics';
 import { SalesPeriod } from '@/types/analytics';
+import { formatCurrency } from '@/lib/currency';
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -13,7 +14,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
-import { TrendingUp, RefreshCw, Loader2, DollarSign, ShoppingBag, Download } from 'lucide-react';
+import { TrendingUp, RefreshCw, Loader2, Banknote, ShoppingBag, Download } from 'lucide-react';
 
 interface SalesChartCardProps {
   activePeriod?: SalesPeriod;
@@ -42,14 +43,6 @@ export function SalesChartCard({ activePeriod, onPeriodChange }: SalesChartCardP
     { label: 'Monthly', value: 'monthly' },
     { label: 'Annual', value: 'annual' },
   ];
-
-  const formatCurrency = (val: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
-    }).format(val);
-  };
 
   const chartData = (salesData || []).map((pt) => {
     const revNum = typeof pt.revenue === 'string' ? parseFloat(pt.revenue) : pt.revenue;
@@ -213,7 +206,7 @@ export function SalesChartCard({ activePeriod, onPeriodChange }: SalesChartCardP
           <div className="flex items-center justify-center gap-6 text-xs font-semibold pt-2 border-t border-[#F2E8DF]">
             <div className="flex items-center gap-2 text-[#E07A5F]">
               <span className="w-3 h-3 rounded-full bg-[#E07A5F]" />
-              <span>Revenue ($)</span>
+              <span>Revenue (฿)</span>
             </div>
             <div className="flex items-center gap-2 text-[#3D2314]">
               <span className="w-3 h-3 rounded-full bg-[#3D2314]" />
@@ -231,17 +224,13 @@ function CustomSalesTooltip({ active, payload, label }: any) {
     const revenue = payload.find((p: any) => p.dataKey === 'revenue')?.value || 0;
     const orderCount = payload.find((p: any) => p.dataKey === 'orderCount')?.value || 0;
 
-    const formattedRevenue = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(revenue);
+    const formattedRevenue = formatCurrency(revenue);
 
     return (
       <div className="bg-white p-3 rounded-xl border border-[#F2E8DF] shadow-md space-y-1 text-xs">
         <p className="font-bold text-[#3D2314]">{label}</p>
         <div className="flex items-center gap-2 text-[#E07A5F]">
-          <DollarSign className="w-3.5 h-3.5" />
+          <Banknote className="w-3.5 h-3.5" />
           <span className="font-bold">{formattedRevenue}</span>
         </div>
         <div className="flex items-center gap-2 text-[#3D2314]">

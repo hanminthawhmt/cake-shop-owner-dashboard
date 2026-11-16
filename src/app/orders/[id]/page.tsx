@@ -12,6 +12,7 @@ import {
 } from '@/hooks/use-orders';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/orders/order-status-badge';
 import { OrderStatus, PaymentStatus } from '@/types/orders';
+import { formatCurrency } from '@/lib/currency';
 import {
   ArrowLeft,
   Calendar,
@@ -56,14 +57,6 @@ function OrderDetailView({ orderId }: { orderId: number }) {
   const updateStatusMutation = useUpdateOrderStatus(orderId);
   const updatePaymentMutation = useUpdatePaymentStatus(orderId);
   const [isPrintingSlip, setIsPrintingSlip] = useState(false);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(amount || 0);
-  };
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';

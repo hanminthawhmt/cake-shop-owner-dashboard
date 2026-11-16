@@ -9,6 +9,7 @@ import { useRoomsList, useUpdateRoom, useDeleteRoom } from '@/hooks/use-rooms';
 import { Room } from '@/types/rooms';
 import { RoomFormModal } from '@/components/rooms/room-form-modal';
 import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
+import { formatCurrency } from '@/lib/currency';
 import {
   Home,
   Plus,
@@ -47,15 +48,6 @@ function RoomsView() {
 
   // Deletion confirmation modal state
   const [deleteTargetRoom, setDeleteTargetRoom] = useState<Room | null>(null);
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(isNaN(num) ? 0 : num);
-  };
 
   const filteredRooms = useMemo(() => {
     if (!rooms) return [];

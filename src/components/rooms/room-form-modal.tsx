@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Room } from '@/types/rooms';
 import { useCreateRoom, useUpdateRoom } from '@/hooks/use-rooms';
-import { X, Loader2, Home, DollarSign, Users } from 'lucide-react';
+import { X, Loader2, Home, Users } from 'lucide-react';
 
 const roomSchema = z.object({
   name: z.string().min(1, 'Room name is required').max(100, 'Name too long'),
@@ -174,11 +174,11 @@ export function RoomFormModal({
             {/* Price */}
             <div className="space-y-1.5">
               <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider">
-                Reservation Price ($) *
+                Reservation Price (฿) *
               </label>
               <div className="relative rounded-xl">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#9C8A7E]">
-                  <DollarSign className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold text-[#9C8A7E]">฿</span>
                 </div>
                 <input
                   type="number"

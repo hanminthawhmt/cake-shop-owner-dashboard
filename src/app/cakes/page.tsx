@@ -9,6 +9,7 @@ import { useCakesList, useCategories, useUpdateCake, useDeleteCake } from '@/hoo
 import { Cake, Category } from '@/types/catalog';
 import { CakeFormModal } from '@/components/cakes/cake-form-modal';
 import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
+import { formatCurrency } from '@/lib/currency';
 import {
   Cake as CakeIcon,
   Plus,
@@ -49,15 +50,6 @@ function CakesCatalogView() {
 
   // Deletion confirmation state
   const [deleteTargetCake, setDeleteTargetCake] = useState<Cake | null>(null);
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(isNaN(num) ? 0 : num);
-  };
 
   const categoryMap = useMemo(() => {
     const map = new Map<number, string>();

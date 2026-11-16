@@ -8,8 +8,9 @@ import { useDashboardAnalytics } from '@/hooks/use-dashboard-analytics';
 import { StatCard } from '@/components/dashboard/stat-card';
 import { OrderStatusBreakdown } from '@/components/dashboard/order-status-breakdown';
 import { DashboardSkeleton } from '@/components/dashboard/dashboard-skeleton';
+import { formatCurrency } from '@/lib/currency';
 import {
-  DollarSign,
+  Banknote,
   TrendingUp,
   ShoppingBag,
   Calculator,
@@ -31,14 +32,6 @@ export default function Home() {
 function DashboardAnalyticsView() {
   const { user } = useAuth();
   const { data, isLoading, isError, refetch, isRefetching } = useDashboardAnalytics();
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(amount);
-  };
 
   const currentDateFormatted = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -100,7 +93,7 @@ function DashboardAnalyticsView() {
               title="Today's Revenue"
               value={formatCurrency(data.todayRevenue)}
               subtitle="Total sales recorded today"
-              icon={DollarSign}
+              icon={Banknote}
               iconBgColor="bg-[#FDF0EE]"
               iconTextColor="text-[#E07A5F]"
               trendBadge={{

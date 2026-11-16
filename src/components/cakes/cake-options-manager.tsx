@@ -18,8 +18,8 @@ import {
   Layers,
   Check,
   X,
-  DollarSign,
 } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 interface CakeOptionsManagerProps {
   cakeId: number;
@@ -190,15 +190,6 @@ function OptionGroupCard({ cakeId, option }: OptionGroupCardProps) {
     );
   };
 
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(isNaN(num) ? 0 : num);
-  };
-
   return (
     <div className="bg-[#FAF6F0]/60 rounded-2xl border border-[#F2E8DF] p-5 space-y-4">
       {/* Option Group Header */}
@@ -302,11 +293,11 @@ function OptionGroupCard({ cakeId, option }: OptionGroupCardProps) {
 
             <div className="space-y-1">
               <label className="block text-[11px] font-bold text-[#3D2314] uppercase">
-                Price Modifier ($)
+                Price Modifier (฿)
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#9C8A7E]">
-                  <DollarSign className="w-3.5 h-3.5" />
+                  <span className="text-xs font-bold text-[#9C8A7E]">฿</span>
                 </div>
                 <input
                   type="number"

@@ -9,6 +9,7 @@ import { useCakeDetail, useCategories, useUpdateCake, useDeleteCake } from '@/ho
 import { CakeImagesManager } from '@/components/cakes/cake-images-manager';
 import { CakeOptionsManager } from '@/components/cakes/cake-options-manager';
 import { DeleteConfirmModal, getApiErrorMessage } from '@/components/common/delete-confirm-modal';
+import { formatCurrency } from '@/lib/currency';
 import {
   ArrowLeft,
   Cake as CakeIcon,
@@ -68,15 +69,6 @@ function CakeDetailView({ cakeId }: { cakeId: number }) {
       setIsAvailable(cake.isAvailable ?? true);
     }
   }, [cake]);
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(isNaN(num) ? 0 : num);
-  };
 
   const handleSaveBasicInfo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -253,7 +245,7 @@ function CakeDetailView({ cakeId }: { cakeId: number }) {
 
           <div className="space-y-1.5">
             <label className="block text-xs font-semibold text-[#3D2314] uppercase tracking-wider">
-              Base Price ($) *
+              Base Price (฿) *
             </label>
             <input
               type="number"

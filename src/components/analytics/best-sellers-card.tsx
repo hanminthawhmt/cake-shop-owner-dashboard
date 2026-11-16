@@ -11,19 +11,11 @@ import {
   Tooltip,
   Cell,
 } from 'recharts';
-import { Award, Cake as CakeIcon, Loader2, DollarSign, Package } from 'lucide-react';
+import { Award, Cake as CakeIcon, Loader2, Coins, Package } from 'lucide-react';
+import { formatCurrency } from '@/lib/currency';
 
 export function BestSellersCard() {
   const { data: bestSellers, isLoading, isError } = useBestSellers(5);
-
-  const formatCurrency = (amount: number | string) => {
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(isNaN(num) ? 0 : num);
-  };
 
   const chartData = (bestSellers || []).map((item) => ({
     name: item.cakeName,
@@ -138,8 +130,8 @@ function CustomBestSellerTooltip({ active, payload }: any) {
           <span>Quantity Sold: <strong>{data.quantity}</strong></span>
         </div>
         <div className="flex items-center gap-2 text-[#E07A5F]">
-          <DollarSign className="w-3.5 h-3.5" />
-          <span>Total Revenue: <strong>${data.revenue}</strong></span>
+          <Coins className="w-3.5 h-3.5" />
+          <span>Total Revenue: <strong>{formatCurrency(data.revenue)}</strong></span>
         </div>
       </div>
     );

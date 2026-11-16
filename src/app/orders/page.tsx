@@ -8,6 +8,7 @@ import { useOrdersList } from '@/hooks/use-orders';
 import { OrderFilterParams } from '@/types/orders';
 import { OrdersFilterBar } from '@/components/orders/orders-filter-bar';
 import { OrderStatusBadge, PaymentStatusBadge } from '@/components/orders/order-status-badge';
+import { formatCurrency } from '@/lib/currency';
 import { ShoppingBag, ChevronRight, Calendar, Clock, User as UserIcon, RefreshCw } from 'lucide-react';
 
 export default function OrdersPage() {
@@ -23,14 +24,6 @@ export default function OrdersPage() {
 function OrdersListView() {
   const [filters, setFilters] = useState<OrderFilterParams>({});
   const { data: orders, isLoading, isError, refetch, isRefetching } = useOrdersList(filters);
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 2,
-    }).format(amount || 0);
-  };
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '';
